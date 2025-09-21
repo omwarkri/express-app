@@ -15,7 +15,7 @@ spec:
         app: express
     spec:
       containers:
-        - name: express
-          image: YOUR_DOCKERHUB_USER/express-app:latest
+        - name: express-app
+          image: omwarkri123/express-app:1
           ports:
             - containerPort: 3000
