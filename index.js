@@ -1,6 +1,7 @@
+// index.js
 const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 3000; // You can change 3000 → 80 for default HTTP
+const PORT = process.env.PORT || 3000;
 
 // Middleware to parse JSON
 app.use(express.json());
@@ -27,7 +28,7 @@ app.post("/api/user", (req, res) => {
   });
 });
 
-// Start server and listen on all interfaces
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running at http://0.0.0.0:${PORT}`);
+// Start server
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
