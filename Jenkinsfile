@@ -1,7 +1,7 @@
 pipeline {
   agent any
   environment {
-    IMAGE = "YOUR_DOCKERHUB_USER/express-app:${env.BUILD_NUMBER}"
+    IMAGE = "omwarkri123/express-app:${env.BUILD_NUMBER}"
   }
   stages {
     stage('Checkout') {
