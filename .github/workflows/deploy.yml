@@ -1,44 +1,38 @@
-name: Deploy Express App
+name: CI/CD Deploy
 
 on:
   push:
     branches:
-      - main # deploy on push to main branch
+      - main # jab main branch me push hoga tab chalega
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      # Docker Hub login
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+
+      # Docker image build & push
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_NAME=${{ secrets.DOCKER_USER }}/express-app:latest
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      # Deploy on EC2 via SSH
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.7
         with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run tests
-        run: npm test --if-present
-
-      - name: Build app
-        run: npm run build --if-present
-
-      # --- Deploy Section ---
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.SERVER_HOST }} # EC2 public DNS
-          username: ${{ secrets.SERVER_USER }} # EC2 user (ubuntu)
-          key: ${{ secrets.SERVER_SSH_KEY }} # your PEM key
-          port: 22
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            mkdir -p /var/www/express-app
-            cd /var/www/express-app
-            git pull origin main
-            npm install --production
-            pm2 restart express-app || pm2 start index.js --name express-app
-            pm2 save
+            docker pull ${{ secrets.DOCKER_USER }}/express-app:latest
+            docker stop express-app || true
+            docker rm express-app || true
+            docker run -d -p 3000:3000 --name express-app ${{ secrets.DOCKER_USER }}/express-app:latest
