@@ -7,7 +7,7 @@ app.use(express.json());
 
 // Home route
 app.get("/", (req, res) => {
-  res.send("🚀 Hello from Express.js this is a om!");
+  res.send("🚀 Hello from Express.js this is a om , i build it!");
   
 });
 
