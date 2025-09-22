@@ -7,7 +7,7 @@ app.use(express.json());
 
 // Home route
 app.get("/", (req, res) => {
-  res.send("🚀 Hello from Express.js which i work , my name is devops and cloud learner!");
+  res.send("🚀 Hello from Express.js which i work , my name is devops and cloud learner today is monday!");
   
 });
 
