@@ -3,28 +3,31 @@ name: CI/CD Deploy
 on:
   push:
     branches:
-      - main # jab main branch me push hoga tab chalega
+      - main # triggers when pushing to main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout the repo
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          submodules: false
 
-      # Docker Hub login
+      # 2️⃣ Log in to Docker Hub
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
 
-      # Docker image build & push
+      # 3️⃣ Build Docker image and push
       - name: Build and Push Docker image
         run: |
           IMAGE_NAME=${{ secrets.DOCKER_USER }}/express-app:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
-      # Deploy on EC2 via SSH
+      # 4️⃣ Deploy on EC2 via SSH
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -32,7 +35,28 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKER_USER }}/express-app:latest
-            docker stop express-app || true
-            docker rm express-app || true
-            docker run -d -p 3000:3000 --name express-app ${{ secrets.DOCKER_USER }}/express-app:latest
+            # Ensure Docker permissions
+            sudo usermod -aG docker $USER || true
+            newgrp docker || true
+
+            # Pull the latest image
+            sudo docker pull ${{ secrets.DOCKER_USER }}/express-app:latest
+
+            # Stop and remove old container
+            sudo docker stop express-app || true
+            sudo docker rm express-app || true
+
+            # Remove dangling images to save space
+            sudo docker rmi -f $(sudo docker images -f "dangling=true" -q) || true
+
+            # Run new container
+            sudo docker run -d -p 3000:3000 --name express-app ${{ secrets.DOCKER_USER }}/express-app:latest
+
+            # Optional: fallback to PM2 if needed
+            if ! docker ps | grep -q express-app; then
+              echo "Docker failed, using PM2 fallback"
+              pm2 stop express-app || true
+              pm2 delete express-app || true
+              pm2 start index.js --name express-app
+              pm2 save
+            fi

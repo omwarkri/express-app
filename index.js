@@ -7,7 +7,7 @@ app.use(express.json());
 
 // Home route
 app.get("/", (req, res) => {
-  res.send("🚀 Hello from Express.js!");
+  res.send("🚀 Hello from Express.js which i work!");
 });
 
 // Example API route
