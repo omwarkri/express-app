@@ -44,6 +44,6 @@ jobs:
       # 7️⃣ Deploy to Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f k8s/express-deploy.yml
-          kubectl apply -f k8s/express-service.yml
+          kubectl apply -f k8s/express-deployment.yml
+          kubectl apply -f k8s/service.yml
           kubectl rollout status deployment/express-app
