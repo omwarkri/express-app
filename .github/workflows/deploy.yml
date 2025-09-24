@@ -1,4 +1,4 @@
-name: CI/CD Deploy (Local VM with K8s)
+name: CI/CD Deploy (Docker Only)
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main # triggers workflow when pushing to main
 
 jobs:
-  build-and-deploy:
+  build-and-push-docker:
     runs-on: ubuntu-latest
 
     steps:
@@ -28,22 +28,3 @@ jobs:
           IMAGE_NAME=${{ secrets.DOCKER_USER }}/express-app:latest
           docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
-
-      # 5️⃣ Setup kubectl
-      - name: Setup kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: latest
-
-      # 6️⃣ Configure kubeconfig from GitHub Secret
-      - name: Configure kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > ~/.kube/config
-
-      # 7️⃣ Deploy to Kubernetes
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl apply -f k8s/express-deployment.yaml
-          kubectl apply -f k8s/service.yaml
-          kubectl rollout status deployment/express-app
