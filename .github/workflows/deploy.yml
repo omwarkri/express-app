@@ -7,17 +7,17 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted # ✅ this runs directly inside your VMware VM
+    runs-on: self-hosted # runs directly inside your VMware VM
 
     steps:
       # Step 1: Checkout repo code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Build Docker image
+      # Step 2: Build Docker image (no cache)
       - name: Build Docker image
         run: |
-          docker build -t express-app:latest .
+          docker build --no-cache -t express-app:latest .
 
       # Step 3: Stop and remove old container (if exists)
       - name: Stop old container
