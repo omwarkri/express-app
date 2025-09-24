@@ -116,7 +116,7 @@ app.get("/", (req, res) => {
             <div class="logo">🚀</div>
             <h1>Welcome to Om Warkri Express.js Server</h1>
             <div class="greeting">
-                Hello from Express.js! This server is built by (devops) <span class="highlight">Om</span> with ❤️
+                Hello from Express.js! This server is built by  om <span class="highlight">Om</span> with devops tools❤️
             </div>
             
             <div class="endpoints">
