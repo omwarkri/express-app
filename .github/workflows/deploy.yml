@@ -1,47 +1,31 @@
-name: CI/CD Deploy (Docker + Server)
+name: CI/CD Deploy (Docker + Self-Hosted Runner)
 
 on:
   push:
     branches:
-      - main   # run only when main branch is pushed
+      - main # trigger only when pushing to main branch
 
 jobs:
-  build-push-deploy:
-    runs-on: ubuntu-latest
+  build-and-deploy:
+    runs-on: self-hosted # ✅ this runs directly inside your VMware VM
 
     steps:
-      # Step 1 - Checkout code
+      # Step 1: Checkout repo code
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2 - Login to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Step 3 - Build and push Docker image
-      - name: Build and Push Docker image
+      # Step 2: Build Docker image
+      - name: Build Docker image
         run: |
-          IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/express-app
-          docker build -t $IMAGE_NAME:latest .
-          docker push $IMAGE_NAME:latest
+          docker build -t express-app:latest .
 
-      # Step 4 - Deploy to Server
-      - name: Deploy on Server
-        uses: appleboy/ssh-action@v1.1.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}   # your server IP or domain
-          username: ${{ secrets.SERVER_USER }}  # e.g. ubuntu
-          key: ${{ secrets.SERVER_SSH_KEY }}   # private key
-          script: |
-            echo "Pulling latest image..."
-            docker pull ${{ secrets.DOCKER_USERNAME }}/express-app:latest
+      # Step 3: Stop and remove old container (if exists)
+      - name: Stop old container
+        run: |
+          docker stop express-app || true
+          docker rm express-app || true
 
-            echo "Stopping old container (if running)..."
-            docker stop express-app || true
-            docker rm express-app || true
-
-            echo "Starting new container..."
-            docker run -d --name express-app -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/express-app:latest
+      # Step 4: Run new container
+      - name: Run new container
+        run: |
+          docker run -d --name express-app -p 3000:3000 express-app:latest
