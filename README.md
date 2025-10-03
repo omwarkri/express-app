@@ -27,3 +27,4 @@ This repo contains a minimal Express portfolio app and CI/CD setup for Jenkins +
 
 - The Jenkins pipeline assumes a Linux agent with Docker and kubectl installed.
 - For testing Kubernetes locally you can use `minikube` or `kind`.
+- this is new line i added 
