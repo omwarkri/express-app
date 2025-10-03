@@ -1,13 +1,13 @@
-name: CI/CD Deploy (Docker + Self-Hosted Runner)
+name: CI/CD Deploy (Docker Only)
 
 on:
   push:
     branches:
-      - main # trigger only when pushing to main branch
+      - main  # Trigger only on push to main branch
 
 jobs:
   build-and-deploy:
-    runs-on: self-hosted # runs directly inside your VMware VM
+    runs-on: self-hosted  # Runs on your own VMware/WSL VM
 
     steps:
       # Step 1: Checkout repo code
