@@ -7,3 +7,5 @@ npm-debug.log
 terraform/*.tfstate
 terraform/*.tfstate.backup
 terraform/.terraform/
+om.save
+tash apply stash@{0}
