@@ -1,20 +1,40 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "express-app"
+        TAG = "v${BUILD_NUMBER}"
+    }
+
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/omwarkri/express-app.git'
+                git branch: 'main',
+                    url: 'https://github.com/omwarkri/express-app.git'
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Docker Build') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASSWORD')]) {
+                sh """
+                docker build -t $DOCKER_USER/$IMAGE_NAME:$TAG .
+                """
+            }
+        }
+
+        stage('Docker Login & Push') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-hub-cred',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
                     sh """
-                    echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin
-                    docker build -t $DOCKER_USER/express-app:latest .
-                    docker push $DOCKER_USER/express-app:latest
+                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push $DOCKER_USER/$IMAGE_NAME:$TAG
                     """
                 }
             }
@@ -23,21 +43,26 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
-                # Make sure kubectl uses local Minikube
                 kubectl config use-context minikube
 
-                # Apply manifests
-                kubectl apply -f k8s/express-deployment.yaml
-                kubectl apply -f k8s/service.yaml
+                kubectl set image deployment/express-deployment \
+                  express-container=$DOCKER_USER/$IMAGE_NAME:$TAG
 
-                # Check rollout
                 kubectl rollout status deployment/express-deployment
 
-                # Verify pods & services
                 kubectl get pods
                 kubectl get svc
                 """
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ CI/CD Pipeline completed successfully"
+        }
+        failure {
+            echo "❌ Pipeline failed"
         }
     }
 }
