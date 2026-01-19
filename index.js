@@ -10,6 +10,7 @@ app.use(express.static('public'));
 
 // Home route with beautiful HTML response
 app.get("/", (req, res) => {
+<<<<<<< Updated upstream
   const htmlResponse = `
     <!DOCTYPE html>
     <html lang="en">
@@ -147,6 +148,9 @@ app.get("/", (req, res) => {
   `;
   
   res.send(htmlResponse);
+=======
+  res.send("🚀 Hello from Express.js! build by Mr-Om");
+>>>>>>> Stashed changes
 });
 
 // Enhanced API data route with HTML formatting
