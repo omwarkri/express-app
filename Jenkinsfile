@@ -17,9 +17,17 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh """
-                docker build -t $DOCKER_USER/$IMAGE_NAME:$TAG .
-                """
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'docker-hub-cred',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )
+                ]) {
+                    sh """
+                      docker build -t $DOCKER_USER/$IMAGE_NAME:$TAG .
+                    """
+                }
             }
         }
 
@@ -33,8 +41,8 @@ pipeline {
                     )
                 ]) {
                     sh """
-                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push $DOCKER_USER/$IMAGE_NAME:$TAG
+                      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+                      docker push $DOCKER_USER/$IMAGE_NAME:$TAG
                     """
                 }
             }
@@ -43,15 +51,10 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh """
-                kubectl config use-context minikube
-
-                kubectl set image deployment/express-deployment \
-                  express-container=$DOCKER_USER/$IMAGE_NAME:$TAG
-
-                kubectl rollout status deployment/express-deployment
-
-                kubectl get pods
-                kubectl get svc
+                  kubectl get nodes
+                  kubectl set image deployment/express-deployment \
+                    express-container=$DOCKER_USER/$IMAGE_NAME:$TAG
+                  kubectl rollout status deployment/express-deployment
                 """
             }
         }

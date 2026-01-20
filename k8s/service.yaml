@@ -2,13 +2,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: express-service
-  labels:
-    app: express
 spec:
-  type: LoadBalancer # Minikube me NodePort bhi use kar sakte ho
+  type: NodePort
   selector:
     app: express
   ports:
-    - name: http
-      port: 80 # Cluster me service port
-      targetPort: 3000 # Container port (Express app ka)
+    - protocol: TCP
+      port: 3000        # Service port
+      targetPort: 3000 # Container port
+      nodePort: 30080
