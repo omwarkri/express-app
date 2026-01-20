@@ -4,6 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "express-app"
         TAG = "v${BUILD_NUMBER}"
+        DOCKER_REPO = "omwarkri123"
     }
 
     stages {
@@ -17,17 +18,9 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'docker-hub-cred',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )
-                ]) {
-                    sh """
-                      docker build -t $DOCKER_USER/$IMAGE_NAME:$TAG .
-                    """
-                }
+                sh '''
+                    docker build -t $DOCKER_REPO/$IMAGE_NAME:$TAG .
+                '''
             }
         }
 
@@ -40,22 +33,24 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )
                 ]) {
-                    sh """
-                      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push $DOCKER_USER/$IMAGE_NAME:$TAG
-                    """
+                    sh '''
+                        echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $DOCKER_REPO/$IMAGE_NAME:$TAG
+                    '''
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh """
-                  kubectl get nodes
-                  kubectl set image deployment/express-deployment \
-                    express-container=$DOCKER_USER/$IMAGE_NAME:$TAG
-                  kubectl rollout status deployment/express-deployment
-                """
+                sh '''
+                    kubectl get nodes
+
+                    kubectl set image deployment/express-deployment \
+                    express-container=$DOCKER_REPO/$IMAGE_NAME:$TAG
+
+                    kubectl rollout status deployment/express-deployment
+                '''
             }
         }
     }
