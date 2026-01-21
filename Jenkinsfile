@@ -16,10 +16,41 @@ pipeline {
             }
         }
 
+        stage('Terraform Init') {
+            steps {
+                dir('terraform') {
+                    sh '''
+                        terraform init
+                    '''
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                dir('terraform') {
+                    sh '''
+                        terraform plan
+                    '''
+                }
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    sh '''
+                        terraform apply -auto-approve
+                    '''
+                }
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 sh '''
                     docker build -t $DOCKER_REPO/$IMAGE_NAME:$TAG .
+                    docker tag $DOCKER_REPO/$IMAGE_NAME:$TAG $DOCKER_REPO/$IMAGE_NAME:latest
                 '''
             }
         }
@@ -36,6 +67,8 @@ pipeline {
                     sh '''
                         echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
                         docker push $DOCKER_REPO/$IMAGE_NAME:$TAG
+                        docker push $DOCKER_REPO/$IMAGE_NAME:latest
+                        docker logout
                     '''
                 }
             }
@@ -44,6 +77,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
+                    kubectl config current-context
                     kubectl get nodes
 
                     kubectl set image deployment/express-deployment \
@@ -57,7 +91,7 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI/CD Pipeline completed successfully"
+            echo "✅ Full CI/CD + Terraform automation completed successfully"
         }
         failure {
             echo "❌ Pipeline failed"
