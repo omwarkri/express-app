@@ -15,6 +15,15 @@ pipeline {
                     url: 'https://github.com/omwarkri/express-app.git'
             }
         }
+        stage('Configure Kubeconfig') {
+            steps {
+               sh '''
+                    mkdir -p $HOME/.kube
+                    minikube kubeconfig > $HOME/.kube/config
+         '''
+    }
+}
+
 
         stage('Terraform Init') {
             steps {
