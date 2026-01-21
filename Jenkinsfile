@@ -15,22 +15,22 @@ pipeline {
                     url: 'https://github.com/omwarkri/express-app.git'
             }
         }
+
         stage('Configure Kubeconfig') {
             steps {
-               sh '''
+                sh '''
                     mkdir -p $HOME/.kube
-                    minikube kubeconfig > $HOME/.kube/config
-         '''
-    }
-}
-
+                    minikube update-context
+                    kubectl config current-context
+                    kubectl get nodes
+                '''
+            }
+        }
 
         stage('Terraform Init') {
             steps {
                 dir('terraform') {
-                    sh '''
-                        terraform init
-                    '''
+                    sh 'terraform init'
                 }
             }
         }
@@ -38,9 +38,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 dir('terraform') {
-                    sh '''
-                        terraform plan
-                    '''
+                    sh 'terraform plan'
                 }
             }
         }
@@ -48,9 +46,7 @@ pipeline {
         stage('Terraform Apply') {
             steps {
                 dir('terraform') {
-                    sh '''
-                        terraform apply -auto-approve
-                    '''
+                    sh 'terraform apply -auto-approve'
                 }
             }
         }
@@ -86,9 +82,6 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    kubectl config current-context
-                    kubectl get nodes
-
                     kubectl set image deployment/express-deployment \
                     express-container=$DOCKER_REPO/$IMAGE_NAME:$TAG
 
